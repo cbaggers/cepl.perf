@@ -19,6 +19,7 @@
           "Sorry, CEPL has already been loaded so it is too late to instrument the code")
   (assert-host-provider-combo cepl-host perf-provider)
   (print "-- Loading perf-provider --")
+  (pushnew :cepl.perf *features*)
   (asdf:load-system perf-provider)
   (setf *tags* tags)
   (set-perf-options perf-provider)
@@ -203,7 +204,9 @@
           (setf (perf-session-current-buffer-pos session) pos))))))
 
 (define-defn-declaration profile (&rest tags)
-  (when (or (eq *tags* t) (intersection tags *tags*))
+  (when (or (eq *tags* t)
+            (intersection tags *tags*)
+            (find (package-name *package*) *tags* :test #'string=))
     (assert *perf-time-function*)
     (let* ((id (func-id %func-name)))
       (values `(%log-profile-event ,id (,*perf-time-function*))
